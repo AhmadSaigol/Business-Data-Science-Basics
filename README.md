@@ -11,4 +11,5 @@
                                                                  color: #2dc6d6;" 
                                                                  onmouseover="this.style.backgroundColor='#2dc6d6'; this.style.color='white'"
                                                                  onmouseout="this.style.backgroundColor='white'; this.style.color='#2dc6d6'">Click here to go to your Journal</a>
+  
 </div>
