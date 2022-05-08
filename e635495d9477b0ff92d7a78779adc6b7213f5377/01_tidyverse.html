@@ -387,64 +387,136 @@ div.tocify {
 </div>
 
 
-<p><strong>IMPORTANT:</strong> You can delete everything in here and
-start fresh. You might want to start by not deleting anything above this
-line until you know what that stuff is doing.</p>
-<p>This is an <code>.Rmd</code> file. It is plain text with special
-features. Any time you write just like this, it will be compiled to
-normal text in the website. If you put a # in front of your text, it
-will create a top level-header.</p>
-<div id="my-first-post" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> My first post</h1>
-<p>Last compiled: 2022-04-24</p>
-<p>Notice that whatever you define as a top level header, automatically
-gets put into the table of contents bar on the left.</p>
-<div id="second-level-header" class="section level2" number="1.1">
-<h2><span class="header-section-number">1.1</span> Second level
-header</h2>
-<p>You can add more headers by adding more hashtags. These won’t be put
-into the table of contents</p>
-<div id="third-level-header" class="section level3" number="1.1.1">
-<h3><span class="header-section-number">1.1.1</span> third level
-header</h3>
-<p>Here’s an even lower level header</p>
+<div id="analysis-of-sales-of-bikes-using-r" class="section level1"
+number="1">
+<h1><span class="header-section-number">1</span> Analysis of Sales of
+Bikes using R:</h1>
+<div id="loading-libraries" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> Loading
+Libraries</h2>
+<pre class="r"><code>library(tidyverse)
+library(readxl)
+library(lubridate)
+library(writexl)</code></pre>
+</div>
+<div id="importing-data" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Importing Data</h2>
+<pre class="r"><code>bikes_tbl &lt;- read_excel(&quot;00_data/01_raw_data/01_bike_sales/01_raw_data/bikes.xlsx&quot;)
+bikeshops_tbl &lt;- read_excel(&quot;00_data/01_raw_data/01_bike_sales/01_raw_data/bikeshops.xlsx&quot;)
+orderlines_tbl &lt;- read_excel(&quot;00_data/01_raw_data/01_bike_sales/01_raw_data/orderlines.xlsx&quot;)</code></pre>
+</div>
+<div id="joining-data" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> Joining Data</h2>
+<pre class="r"><code>bike_orderlines_joined_tbl &lt;- orderlines_tbl %&gt;%
+  left_join(bikes_tbl, by = c(&quot;product.id&quot; = &quot;bike.id&quot;)) %&gt;%
+  left_join(bikeshops_tbl, by = c(&quot;customer.id&quot; = &quot;bikeshop.id&quot;))</code></pre>
+</div>
+<div id="wrangling-data" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> Wrangling Data</h2>
+<pre class="r"><code>bike_orderlines_wrangled_tbl &lt;- bike_orderlines_joined_tbl %&gt;% 
+  separate(col = location, into = c(&quot;city&quot;, &quot;state&quot;), sep = &quot;, &quot;) %&gt;% 
+  mutate( total.price= price*quantity) %&gt;%
+  set_names(names(.) %&gt;% str_replace_all(&quot;\\.&quot;, &quot;_&quot;))</code></pre>
+</div>
+<div id="analysis-by-location-state" class="section level2"
+number="1.5">
+<h2><span class="header-section-number">1.5</span> Analysis by location
+(state)</h2>
+<div id="preparing-data" class="section level3" number="1.5.1">
+<h3><span class="header-section-number">1.5.1</span> Preparing Data</h3>
+<pre class="r"><code>sales_by_location_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;% 
+  group_by(state)%&gt;%
+  summarise(sales=sum(total_price)) %&gt;%
+  mutate(sales_in_euro = scales::dollar(sales, big.mark = &quot;.&quot;, 
+                                   decimal.mark = &quot;,&quot;, 
+                                   prefix = &quot;&quot;, 
+                                   suffix = &quot; €&quot;))
+sales_by_location_tbl %&gt;% select(-(sales))</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["state"],"name":[1],"type":["chr"],"align":["left"]},{"label":["sales_in_euro"],"name":[2],"type":["chr"],"align":["left"]}],"data":[{"1":"Baden-Württemberg","2":"6.521.090 €"},{"1":"Bavaria","2":"6.742.819 €"},{"1":"Berlin","2":"1.128.433 €"},{"1":"Bremen","2":"10.653.499 €"},{"1":"Hamburg","2":"3.874.756 €"},{"1":"Hesse","2":"1.558.901 €"},{"1":"Lower Saxony","2":"4.107.115 €"},{"1":"Mecklenburg-Western Pomerania","2":"618.974 €"},{"1":"North Rhine-Westphalia","2":"21.200.613 €"},{"1":"Saxony","2":"2.230.245 €"},{"1":"Saxony-Anhalt","2":"569.614 €"},{"1":"Schleswig-Holstein","2":"3.224.749 €"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
 </div>
 </div>
+<div id="results" class="section level3" number="1.5.2">
+<h3><span class="header-section-number">1.5.2</span> Results</h3>
+<pre class="r"><code>sales_by_location_tbl %&gt;% ggplot(aes(x = state, y = sales)) +
+  geom_col(fill = &quot;#2DC6D6&quot;) +
+  geom_label(aes(label = sales_in_euro)) +
+  scale_y_continuous(labels = scales::dollar_format(big.mark = &quot;.&quot;, 
+                                                    decimal.mark = &quot;,&quot;, 
+                                                    prefix = &quot;&quot;, 
+                                                    suffix = &quot; €&quot;)) +
+  labs(
+    title    = &quot;Revenue by State&quot;,
+    subtitle = &quot;North Rhine-Westphalia had the highest revenue.&quot;,
+    x = &quot;&quot;,
+    y = &quot;Revenue&quot;
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
+<p><img src="01_tidyverse_files/figure-html/unnamed-chunk-6-1.png" width="1152" /></p>
 </div>
-<div id="my-second-post-note-the-order" class="section level1"
-number="2">
-<h1><span class="header-section-number">2</span> My second post (note
-the order)</h1>
-<p>Last compiled: 2022-04-24</p>
-<p>I’m writing this tutorial going from the top down. And, this is how
-it will be printed. So, notice the second post is second in the list. If
-you want your most recent post to be at the top, then make a new post
-starting at the top. If you want the oldest first, do, then keep adding
-to the bottom</p>
 </div>
-<div id="adding-r-stuff" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Adding R stuff</h1>
-<p>So far this is just a blog where you can write in plain text and
-serve your writing to a webpage. One of the main purposes of this lab
-journal is to record your progress learning R. The reason I am asking
-you to use this process is because you can both make a website, and a
-lab journal, and learn R all in R-studio. This makes everything really
-convenient and in the same place.</p>
-<p>So, let’s say you are learning how to make a histogram in R. For
-example, maybe you want to sample 100 numbers from a normal distribution
-with mean = 0, and standard deviation = 1, and then you want to plot a
-histogram. You can do this right here by using an r code block, like
-this:</p>
-<pre class="r"><code>samples &lt;- rnorm(100, mean=0, sd=1)
-hist(samples)</code></pre>
-<p><img src="01_tidyverse_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<p>When you knit this R Markdown document, you will see that the
-histogram is printed to the page, along with the R code. This document
-can be set up to hide the R code in the webpage, just delete the comment
-(hashtag) from the cold folding option in the yaml header up top. For
-purposes of letting yourself see the code, and me see the code, best to
-keep it the way that it is. You’ll learn that all of these things and
-more can be customized in each R code block.</p>
+<div id="analysis-by-location-state-and-year" class="section level2"
+number="1.6">
+<h2><span class="header-section-number">1.6</span> Analysis by location
+(state) and year</h2>
+<div id="preparing-data-1" class="section level3" number="1.6.1">
+<h3><span class="header-section-number">1.6.1</span> Preparing Data</h3>
+<pre class="r"><code>sales_by_year_location_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;% 
+  transmute(year = year(order_date), total_price, state) %&gt;%
+  group_by(year, state) %&gt;%
+  summarise(sales=sum(total_price)) %&gt;%
+  ungroup() %&gt;%
+  mutate(sales_in_euro = scales::dollar(sales, big.mark = &quot;.&quot;, 
+                                     decimal.mark = &quot;,&quot;, 
+                                     prefix = &quot;&quot;, 
+                                     suffix = &quot; €&quot;))
+sales_by_year_location_tbl %&gt;% select(-(sales))</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["year"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["state"],"name":[2],"type":["chr"],"align":["left"]},{"label":["sales_in_euro"],"name":[3],"type":["chr"],"align":["left"]}],"data":[{"1":"2015","2":"Baden-Württemberg","3":"1.031.924 €"},{"1":"2015","2":"Bavaria","3":"1.301.461 €"},{"1":"2015","2":"Berlin","3":"95.853 €"},{"1":"2015","2":"Bremen","3":"1.395.912 €"},{"1":"2015","2":"Hamburg","3":"423.090 €"},{"1":"2015","2":"Hesse","3":"308.609 €"},{"1":"2015","2":"Lower Saxony","3":"584.386 €"},{"1":"2015","2":"Mecklenburg-Western Pomerania","3":"222.003 €"},{"1":"2015","2":"North Rhine-Westphalia","3":"3.735.092 €"},{"1":"2015","2":"Saxony","3":"238.371 €"},{"1":"2015","2":"Saxony-Anhalt","3":"144.737 €"},{"1":"2015","2":"Schleswig-Holstein","3":"448.844 €"},{"1":"2016","2":"Baden-Württemberg","3":"1.561.658 €"},{"1":"2016","2":"Bavaria","3":"1.129.852 €"},{"1":"2016","2":"Berlin","3":"72.361 €"},{"1":"2016","2":"Bremen","3":"2.057.760 €"},{"1":"2016","2":"Hamburg","3":"636.550 €"},{"1":"2016","2":"Hesse","3":"225.647 €"},{"1":"2016","2":"Lower Saxony","3":"639.839 €"},{"1":"2016","2":"Mecklenburg-Western Pomerania","3":"75.443 €"},{"1":"2016","2":"North Rhine-Westphalia","3":"3.002.792 €"},{"1":"2016","2":"Saxony","3":"589.994 €"},{"1":"2016","2":"Saxony-Anhalt","3":"65.901 €"},{"1":"2016","2":"Schleswig-Holstein","3":"672.710 €"},{"1":"2017","2":"Baden-Württemberg","3":"1.224.152 €"},{"1":"2017","2":"Bavaria","3":"1.411.851 €"},{"1":"2017","2":"Berlin","3":"451.293 €"},{"1":"2017","2":"Bremen","3":"2.557.145 €"},{"1":"2017","2":"Hamburg","3":"731.678 €"},{"1":"2017","2":"Hesse","3":"338.783 €"},{"1":"2017","2":"Lower Saxony","3":"1.055.747 €"},{"1":"2017","2":"Mecklenburg-Western Pomerania","3":"201.218 €"},{"1":"2017","2":"North Rhine-Westphalia","3":"4.671.541 €"},{"1":"2017","2":"Saxony","3":"595.378 €"},{"1":"2017","2":"Saxony-Anhalt","3":"194.509 €"},{"1":"2017","2":"Schleswig-Holstein","3":"1.076.996 €"},{"1":"2018","2":"Baden-Württemberg","3":"1.114.327 €"},{"1":"2018","2":"Bavaria","3":"1.168.783 €"},{"1":"2018","2":"Berlin","3":"318.974 €"},{"1":"2018","2":"Bremen","3":"1.833.844 €"},{"1":"2018","2":"Hamburg","3":"930.803 €"},{"1":"2018","2":"Hesse","3":"330.647 €"},{"1":"2018","2":"Lower Saxony","3":"929.624 €"},{"1":"2018","2":"Mecklenburg-Western Pomerania","3":"21.041 €"},{"1":"2018","2":"North Rhine-Westphalia","3":"4.601.681 €"},{"1":"2018","2":"Saxony","3":"338.344 €"},{"1":"2018","2":"Saxony-Anhalt","3":"81.163 €"},{"1":"2018","2":"Schleswig-Holstein","3":"572.622 €"},{"1":"2019","2":"Baden-Württemberg","3":"1.589.029 €"},{"1":"2019","2":"Bavaria","3":"1.730.872 €"},{"1":"2019","2":"Berlin","3":"189.952 €"},{"1":"2019","2":"Bremen","3":"2.808.838 €"},{"1":"2019","2":"Hamburg","3":"1.152.635 €"},{"1":"2019","2":"Hesse","3":"355.215 €"},{"1":"2019","2":"Lower Saxony","3":"897.519 €"},{"1":"2019","2":"Mecklenburg-Western Pomerania","3":"99.269 €"},{"1":"2019","2":"North Rhine-Westphalia","3":"5.189.507 €"},{"1":"2019","2":"Saxony","3":"468.158 €"},{"1":"2019","2":"Saxony-Anhalt","3":"83.304 €"},{"1":"2019","2":"Schleswig-Holstein","3":"453.577 €"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="results-1" class="section level3" number="1.6.2">
+<h3><span class="header-section-number">1.6.2</span> Results</h3>
+<pre class="r"><code>sales_by_year_location_tbl %&gt;% ggplot(aes(x = year, y = sales, fill = state)) +
+  geom_col() +
+  facet_wrap(~ state) +
+  scale_y_continuous(labels = scales::dollar_format(big.mark = &quot;.&quot;, 
+                                                    decimal.mark = &quot;,&quot;, 
+                                                    prefix = &quot;&quot;, 
+                                                    suffix = &quot; €&quot;)) +
+  labs(
+    title    = &quot;Revenue by year and location&quot;,
+    fill = &quot;Locations&quot;
+  ) +
+  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
+<p><img src="01_tidyverse_files/figure-html/plot-1.png" width="1152" /></p>
+</div>
+</div>
+<div id="saving-data-for-future-use" class="section level2"
+number="1.7">
+<h2><span class="header-section-number">1.7</span> Saving Data for
+Future Use</h2>
+<div id="excel" class="section level3" number="1.7.1">
+<h3><span class="header-section-number">1.7.1</span> Excel</h3>
+<pre class="r"><code>bike_orderlines_wrangled_tbl %&gt;%
+  write_xlsx(&quot;00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.xlsx&quot;)</code></pre>
+</div>
+<div id="csv" class="section level3" number="1.7.2">
+<h3><span class="header-section-number">1.7.2</span> CSV</h3>
+<pre class="r"><code>bike_orderlines_wrangled_tbl %&gt;% 
+  write_csv(&quot;00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.csv&quot;)</code></pre>
+</div>
+<div id="rds" class="section level3" number="1.7.3">
+<h3><span class="header-section-number">1.7.3</span> RDS</h3>
+<pre class="r"><code>bike_orderlines_wrangled_tbl %&gt;% 
+  write_rds(&quot;00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.rds&quot;)</code></pre>
+</div>
+</div>
 </div>
 
 
