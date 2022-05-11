@@ -564,10 +564,8 @@ final_data_tbl &lt;- models_tbl %&gt;%
   bind_cols(model_types_tbl) %&gt;%
   bind_cols(prices_tbl) %&gt;% 
   separate(col= &quot;...1&quot;, into = c(&quot;empty&quot;, &quot;vehicle&quot;,&quot;Sub_category_1&quot;, &quot;Sub_category_2&quot;, &quot;Sub_category_3&quot;), sep = &quot;/&quot; ,remove = FALSE) %&gt;% 
-  rename(&quot;URL&quot;=&quot;...1&quot;, &quot;Model&quot;=&quot;...2&quot;, &quot;price(in euro)&quot;= &quot;...3&quot;) %&gt;% 
-  select(-2,-3)
-  
-#final_data_tbl[[6]] &lt;- final_data_tbl[[6]] %&gt;% as.numeric()</code></pre>
+  rename(&quot;URL&quot;=&quot;...1&quot;, &quot;Model&quot;=&quot;...2&quot;, Price=&quot;...3&quot;) %&gt;% 
+  select(-2,-3)</code></pre>
 </div>
 <div id="results" class="section level2" number="2.9">
 <h2><span class="header-section-number">2.9</span> Results</h2>

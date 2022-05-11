@@ -15,40 +15,87 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
-
-**IMPORTANT:** You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
-
-This is an `.Rmd` file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-# My first post
-
-Last compiled: `r Sys.Date()`
-
-Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left. 
-
-## Second level header
-
-You can add more headers by adding more hashtags. These won't be put into the table of contents
-
-### third level header
-
-Here's an even lower level header
-
-# My second post (note the order)
-
-Last compiled: `r Sys.Date()`
-
-I'm writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom
-
-# Adding R stuff
-
-So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place. 
-
-So, let's say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:
-
+# Patent Data Analysis
+## Libraries
 ```{r}
-samples <- rnorm(100, mean=0, sd=1)
-hist(samples)
+library(vroom)
+
 ```
 
-When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You'll learn that all of these things and more can be customized in each R code block.
+## Loading Data
+
+```{r}
+col_types_patent <- list(
+  id = col_character(),
+  date = col_date("%Y-%m-%d"),
+  num_claims = col_integer()
+)
+
+patent_tbl <- vroom(
+            file       = "00_data/03_data/Patent_data_reduced/patent.tsv", 
+            delim      = "\t", 
+            col_types  = col_types_patent,
+            na         = c("", "NA", "NULL")
+        )
+
+col_types_assi <- list(
+  id = col_character(),
+  type = col_integer(),
+  organization =col_character()
+)
+
+assignee_tbl <-  vroom(
+            file       = "00_data/03_data/Patent_data_reduced/assignee.tsv", 
+            delim      = "\t", 
+            col_types  = col_types_assi,
+            na         = c("", "NA", "NULL")
+        )
+
+col_types_patent_assi <- list(
+  patent_id =col_character(),
+  assignee_id =  col_character()
+)
+
+patent_assignee_tbl <-  vroom(
+            file       = "00_data/03_data/Patent_data_reduced/patent_assignee.tsv", 
+            delim      = "\t", 
+            col_types  = col_types_patent_assi,
+            na         = c("", "NA", "NULL")
+        )
+
+col_types_uspc <- list(
+  patent_id = col_character(),
+  mainclass_id = col_character(),
+  sequence =col_integer()
+)
+
+uspce_tbl <-  vroom(
+            file       = "00_data/03_data/Patent_data_reduced/uspc.tsv", 
+            delim      = "\t", 
+            col_types  = col_types_uspc,
+            na         = c("", "NA", "NULL")
+        )
+
+```
+
+## Patent Dominance
+
+Merge assignee and patent_assignee through assignee id to form combined data. extract subset of data where type==2 then group it via organization to determine the number of rows and arrange it in the decreasing order.
+```{r}
+
+```
+
+## Recent patent activity
+Merge the previously merged data with patent through id.  extract subset of data where type==2 then group it via organization and perform summation operation along number of claims
+```{r}
+
+
+```
+## Innovation in Tech:
+Merge the merged data in question 1 with uspc through patient id. Group via sequence and determine the number of rows and arrange it in decreasing order. 
+group via type and arrange it in decreasing order. Obtain top 10 companies and sum along main class.
+
+```{r}
+
+```
+

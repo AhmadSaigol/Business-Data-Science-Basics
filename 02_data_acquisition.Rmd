@@ -151,7 +151,7 @@ for (model in models){
 
 ```
 ## Assembling Everything in single table
-```{r}
+```{r message=FALSE, warning=FALSE}
 models_tbl <- tibble() 
 model_types_tbl <- tibble()
 prices_tbl <- tibble()
@@ -181,14 +181,13 @@ final_data_tbl <- models_tbl %>%
   bind_cols(model_types_tbl) %>%
   bind_cols(prices_tbl) %>% 
   separate(col= "...1", into = c("empty", "vehicle","Sub_category_1", "Sub_category_2", "Sub_category_3"), sep = "/" ,remove = FALSE) %>% 
-  rename("URL"="...1", "Model"="...2", "price(in euro)"= "...3") %>% 
+  rename("URL"="...1", "Model"="...2", Price="...3") %>% 
   select(-2,-3)
   
-#final_data_tbl[[6]] <- final_data_tbl[[6]] %>% as.numeric()
 
 ```
 ## Results
-```{r}
+```{r message=FALSE, warning=FALSE}
 final_data_tbl %>% head(n=10)
 ```
 
