@@ -10,6 +10,7 @@
 
 
 
+<meta name="date" content="2022-05-10" />
 
 <title>02 Data Acqusition</title>
 
@@ -379,69 +380,204 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">02 Data Acqusition</h1>
-<h4 class="date">2022-04</h4>
+<h4 class="date">2022-05-10</h4>
 
 </div>
 
 
-<p><strong>IMPORTANT:</strong> You can delete everything in here and
-start fresh. You might want to start by not deleting anything above this
-line until you know what that stuff is doing.</p>
-<p>This is an <code>.Rmd</code> file. It is plain text with special
-features. Any time you write just like this, it will be compiled to
-normal text in the website. If you put a # in front of your text, it
-will create a top level-header.</p>
-<div id="my-first-post" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> My first post</h1>
-<p>Last compiled: 2022-05-08</p>
-<p>Notice that whatever you define as a top level header, automatically
-gets put into the table of contents bar on the left.</p>
-<div id="second-level-header" class="section level2" number="1.1">
-<h2><span class="header-section-number">1.1</span> Second level
-header</h2>
-<p>You can add more headers by adding more hashtags. These won’t be put
-into the table of contents</p>
-<div id="third-level-header" class="section level3" number="1.1.1">
-<h3><span class="header-section-number">1.1.1</span> third level
-header</h3>
-<p>Here’s an even lower level header</p>
+<div id="part-1-bored-lets-find-you-something" class="section level1"
+number="1">
+<h1><span class="header-section-number">1</span> Part 1: Bored? Let’s
+find you something</h1>
+<div id="loading-libraries" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> Loading
+Libraries</h2>
+<pre class="r"><code>library(httr)
+library(tidyverse)</code></pre>
+</div>
+<div id="getting-data" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Getting Data</h2>
+<pre class="r"><code>get_data &lt;- function() {
+  url &lt;- &quot;http://www.boredapi.com/api/activity/&quot;
+  GET(url) %&gt;% content(as=&quot;parsed&quot;)
+}
+
+num_iter = c(1:10)
+for (i in num_iter){
+  if (i==1){
+    data_from_web &lt;- as_tibble(get_data())
+  } 
+  else{
+    data_from_web &lt;-  get_data() %&gt;% 
+      as_tibble() %&gt;% 
+      bind_rows(data_from_web)
+  }
+}</code></pre>
+</div>
+<div id="post-processing-the-data" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> Post processing the
+data</h2>
+<pre class="r"><code>data_from_web &lt;- data_from_web %&gt;%  
+  mutate_all( na_if, &quot;&quot;) %&gt;% 
+  select(-key)</code></pre>
+</div>
+<div id="there-you-go.-have-fun" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> There you go. Have
+Fun!</h2>
+<pre class="r"><code>data_from_web</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["activity"],"name":[1],"type":["chr"],"align":["left"]},{"label":["type"],"name":[2],"type":["chr"],"align":["left"]},{"label":["participants"],"name":[3],"type":["int"],"align":["right"]},{"label":["price"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["link"],"name":[5],"type":["chr"],"align":["left"]},{"label":["accessibility"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"Write a short story","2":"recreational","3":"1","4":"0.00","5":"NA","6":"0.1"},{"1":"Learn how to make an Alexa skill","2":"education","3":"1","4":"0.00","5":"https://developer.amazon.com/en-US/docs/alexa/custom-skills/steps-to-build-a-custom-skill.html","6":"0.1"},{"1":"Go to a local thrift shop","2":"recreational","3":"1","4":"0.10","5":"NA","6":"0.2"},{"1":"Organize your movie collection","2":"busywork","3":"1","4":"0.00","5":"NA","6":"0.0"},{"1":"Go to a concert with some friends","2":"social","3":"4","4":"0.60","5":"NA","6":"0.4"},{"1":"Do a jigsaw puzzle","2":"recreational","3":"1","4":"0.10","5":"https://en.wikipedia.org/wiki/Jigsaw_puzzle","6":"1.0"},{"1":"Go to an escape room","2":"social","3":"4","4":"0.50","5":"NA","6":"0.3"},{"1":"Go swimming with a friend","2":"social","3":"2","4":"0.10","5":"NA","6":"0.1"},{"1":"Bake pastries for you and your neighbor","2":"cooking","3":"1","4":"0.40","5":"NA","6":"0.3"},{"1":"Go to the library and find an interesting book","2":"relaxation","3":"1","4":"0.05","5":"NA","6":"0.2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><em>Don’t like the activities? re-run the file and find yourself new
+possibilities.</em></p>
+<div id="description-of-columns" class="section level3" number="1.4.1">
+<h3><span class="header-section-number">1.4.1</span> Description of
+columns:</h3>
+<ul>
+<li><p><strong>type</strong>: Type of the activity [“education”,
+“recreational”, “social”, “diy”, “charity”, “cooking”, “relaxation”,
+“music”, “busywork”]</p></li>
+<li><p><strong>participants</strong>: The number of people that this
+activity could involve [0, n]</p></li>
+<li><p><strong>price</strong>: A factor describing the cost of the event
+with zero being free [0, 1]</p></li>
+<li><p><strong>accessibility</strong>: A factor describing how possible
+an event is to do with zero being the most accessible [0.0,
+1.0]</p></li>
+</ul>
 </div>
 </div>
 </div>
-<div id="my-second-post-note-the-order" class="section level1"
-number="2">
-<h1><span class="header-section-number">2</span> My second post (note
-the order)</h1>
-<p>Last compiled: 2022-05-08</p>
-<p>I’m writing this tutorial going from the top down. And, this is how
-it will be printed. So, notice the second post is second in the list. If
-you want your most recent post to be at the top, then make a new post
-starting at the top. If you want the oldest first, do, then keep adding
-to the bottom</p>
+<div id="scraping-competitor-website" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Scraping competitor
+website</h1>
+<div id="loading-librariees" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Loading
+Librariees</h2>
+<pre class="r"><code>library(rvest)
+library(glue)</code></pre>
 </div>
-<div id="adding-r-stuff" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Adding R stuff</h1>
-<p>So far this is just a blog where you can write in plain text and
-serve your writing to a webpage. One of the main purposes of this lab
-journal is to record your progress learning R. The reason I am asking
-you to use this process is because you can both make a website, and a
-lab journal, and learn R all in R-studio. This makes everything really
-convenient and in the same place.</p>
-<p>So, let’s say you are learning how to make a histogram in R. For
-example, maybe you want to sample 100 numbers from a normal distribution
-with mean = 0, and standard deviation = 1, and then you want to plot a
-histogram. You can do this right here by using an r code block, like
-this:</p>
-<pre class="r"><code>samples &lt;- rnorm(100, mean=0, sd=1)
-hist(samples)</code></pre>
-<p><img src="02_data_acquisition_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<p>When you knit this R Markdown document, you will see that the
-histogram is printed to the page, along with the R code. This document
-can be set up to hide the R code in the webpage, just delete the comment
-(hashtag) from the cold folding option in the yaml header up top. For
-purposes of letting yourself see the code, and me see the code, best to
-keep it the way that it is. You’ll learn that all of these things and
-more can be customized in each R code block.</p>
+<div id="base-url-and-helper-function" class="section level2"
+number="2.2">
+<h2><span class="header-section-number">2.2</span> Base URL and Helper
+function</h2>
+<pre class="r"><code>base_url &lt;- &quot;https://www.rosebikes.com&quot;
+read_paths &lt;- function(path, css_selector){
+  base_url %&gt;% 
+  glue(path) %&gt;%
+  read_html() %&gt;% 
+  html_nodes(css = css_selector) %&gt;%
+  html_attr(&quot;href&quot;)
+}</code></pre>
+</div>
+<div id="getting-catalogs" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> Getting Catalogs</h2>
+<pre class="r"><code>catalogs &lt;- read_paths(path=&quot;/bikes&quot;, css_selector = &quot;.catalog-navigation__link&quot;)[1:7]</code></pre>
+</div>
+<div id="getting-categories" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> Getting
+Categories</h2>
+<pre class="r"><code>categories &lt;- map(catalogs, read_paths, css_selector =&quot;.catalog-navigation__link&quot; )
+categories[[1]] &lt;- categories[[1]][2:5]
+categories[[2]] &lt;- categories[[2]][2:3]
+categories[3:7] &lt;- catalogs[3:7]</code></pre>
+</div>
+<div id="getting-models" class="section level2" number="2.5">
+<h2><span class="header-section-number">2.5</span> Getting Models</h2>
+<pre class="r"><code>models &lt;- list()
+for (category in categories){
+  temp = map(category, read_paths, css_selector=&quot;.catalog-category-bikes__button&quot;)  
+  models &lt;- append(models, temp)
+}</code></pre>
+</div>
+<div id="getting-model-types" class="section level2" number="2.6">
+<h2><span class="header-section-number">2.6</span> Getting Model
+types</h2>
+<pre class="r"><code>get_model_types &lt;-function(model_type){
+  base_url %&gt;% 
+    glue(model_type) %&gt;% 
+    read_html() %&gt;% 
+    html_nodes(&quot;h3.basic-headline__title&quot;) %&gt;% 
+    html_text()
+}
+
+model_types &lt;- list()
+for (model in models){
+  temp = map(model, get_model_types)  
+  model_types &lt;- append(model_types, temp)
+}
+model_types[[4]] = model_types[[4]][5:10] 
+model_types[[11]] = model_types[[11]][3:20]</code></pre>
+</div>
+<div id="getting-prices" class="section level2" number="2.7">
+<h2><span class="header-section-number">2.7</span> Getting Prices</h2>
+<pre class="r"><code>replace_values =c(&quot; &quot;=&quot;&quot;, &quot;\n&quot;=&quot;&quot;, &quot;€&quot;=&quot;&quot;, &quot;,&quot;=&quot;&quot;)
+
+get_prices &lt;-function(model_type){
+  base_url %&gt;% 
+    glue(model_type) %&gt;% 
+    read_html() %&gt;% 
+    html_nodes(css=&quot;.product-tile-price__current-value&quot;) %&gt;%
+    html_text() %&gt;% 
+    str_replace_all(replace_values) %&gt;% 
+    as.numeric()
+}
+
+prices &lt;- list()
+for (model in models){
+  temp = map(model, get_prices)
+  prices &lt;- append(prices, temp)
+}</code></pre>
+</div>
+<div id="assembling-everything-in-single-table" class="section level2"
+number="2.8">
+<h2><span class="header-section-number">2.8</span> Assembling Everything
+in single table</h2>
+<pre class="r"><code>models_tbl &lt;- tibble() 
+model_types_tbl &lt;- tibble()
+prices_tbl &lt;- tibble()
+counter = 1
+for (model in models){
+  for (sp_model in model){
+  models_tbl &lt;- bind_rows(models_tbl, 
+                          matrix(sp_model %&gt;% 
+                                   rep(times= length(prices[[counter]]))) %&gt;% 
+                            set_names(c(&quot;a&quot;)))
+  model_types_tbl &lt;- bind_rows(model_types_tbl, 
+                               matrix(model_types[[counter]]) %&gt;% 
+                                 set_names(c(&quot;b&quot;)))
+  prices_tbl &lt;- bind_rows(prices_tbl,
+                          matrix(prices[[counter]]) %&gt;% 
+                            set_names(c(&quot;c&quot;)))
+  counter = counter +1
+  if (counter==19){
+    break
+  }
+  }
+  if (counter==19){
+    break
+  }
+}
+final_data_tbl &lt;- models_tbl %&gt;% 
+  bind_cols(model_types_tbl) %&gt;%
+  bind_cols(prices_tbl) %&gt;% 
+  separate(col= &quot;...1&quot;, into = c(&quot;empty&quot;, &quot;vehicle&quot;,&quot;Sub_category_1&quot;, &quot;Sub_category_2&quot;, &quot;Sub_category_3&quot;), sep = &quot;/&quot; ,remove = FALSE) %&gt;% 
+  rename(&quot;URL&quot;=&quot;...1&quot;, &quot;Model&quot;=&quot;...2&quot;, &quot;price(in euro)&quot;= &quot;...3&quot;) %&gt;% 
+  select(-2,-3)
+  
+#final_data_tbl[[6]] &lt;- final_data_tbl[[6]] %&gt;% as.numeric()</code></pre>
+</div>
+<div id="results" class="section level2" number="2.9">
+<h2><span class="header-section-number">2.9</span> Results</h2>
+<pre class="r"><code>final_data_tbl %&gt;% head(n=10)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["URL"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Sub_category_1"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Sub_category_2"],"name":[3],"type":["chr"],"align":["left"]},{"label":["Sub_category_3"],"name":[4],"type":["chr"],"align":["left"]},{"label":["Model"],"name":[5],"type":["chr"],"align":["left"]},{"label":["\"price(in euro)\""],"name":[6],"type":["chr"],"align":["left"]}],"data":[{"1":"/bikes/mtb/cross-country/count-solo","2":"mtb","3":"cross-country","4":"count-solo","5":"COUNT SOLO 1","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/count-solo","2":"mtb","3":"cross-country","4":"count-solo","5":"COUNT SOLO 2","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/count-solo","2":"mtb","3":"cross-country","4":"count-solo","5":"COUNT SOLO 3","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/psycho-path","2":"mtb","3":"cross-country","4":"psycho-path","5":"PSYCHO PATH 1","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/psycho-path","2":"mtb","3":"cross-country","4":"psycho-path","5":"PSYCHO PATH 2","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/psycho-path","2":"mtb","3":"cross-country","4":"psycho-path","5":"PSYCHO PATH 3","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/thrill-hill","2":"mtb","3":"cross-country","4":"thrill-hill","5":"THRILL HILL 1","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/thrill-hill","2":"mtb","3":"cross-country","4":"thrill-hill","5":"THRILL HILL 2","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/thrill-hill","2":"mtb","3":"cross-country","4":"thrill-hill","5":"THRILL HILL 3","6":"price(in euro)"},{"1":"/bikes/mtb/cross-country/thrill-hill","2":"mtb","3":"cross-country","4":"thrill-hill","5":"THRILL HILL 4","6":"price(in euro)"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
 </div>
 
 

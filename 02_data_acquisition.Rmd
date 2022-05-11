@@ -1,6 +1,6 @@
 ---
 title: "02 Data Acqusition"
-date: "2022-04"
+date: "2022-05-10"
 output:
   html_document:
     toc: true
@@ -16,39 +16,179 @@ output:
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
 
-**IMPORTANT:** You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
+# Part 1: Bored? Let's find you something
 
-This is an `.Rmd` file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-# My first post
-
-Last compiled: `r Sys.Date()`
-
-Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left. 
-
-## Second level header
-
-You can add more headers by adding more hashtags. These won't be put into the table of contents
-
-### third level header
-
-Here's an even lower level header
-
-# My second post (note the order)
-
-Last compiled: `r Sys.Date()`
-
-I'm writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom
-
-# Adding R stuff
-
-So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place. 
-
-So, let's say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:
-
+## Loading Libraries
 ```{r}
-samples <- rnorm(100, mean=0, sd=1)
-hist(samples)
+library(httr)
+library(tidyverse)
 ```
 
-When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You'll learn that all of these things and more can be customized in each R code block.
+## Getting Data
+```{r}
+get_data <- function() {
+  url <- "http://www.boredapi.com/api/activity/"
+  GET(url) %>% content(as="parsed")
+}
+
+num_iter = c(1:10)
+for (i in num_iter){
+  if (i==1){
+    data_from_web <- as_tibble(get_data())
+  } 
+  else{
+    data_from_web <-  get_data() %>% 
+      as_tibble() %>% 
+      bind_rows(data_from_web)
+  }
+}
+```
+## Post processing the data
+
+```{r}
+data_from_web <- data_from_web %>%  
+  mutate_all( na_if, "") %>% 
+  select(-key)
+```
+
+## There you go. Have Fun!
+```{r}
+data_from_web
+```
+*Don't like the activities? re-run the file and find yourself new possibilities.*
+
+
+### Description of columns:
+
+* **type**: Type of the activity ["education", "recreational", "social", "diy", "charity", "cooking", "relaxation", "music", "busywork"]
+
+
+* **participants**: The number of people that this activity could involve [0, n]
+
+
+* **price**: A factor describing the cost of the event with zero being free [0, 1]
+
+* **accessibility**: A factor describing how possible an event is to do with zero being the most accessible [0.0, 1.0]
+
+
+# Scraping competitor website
+
+## Loading Librariees
+```{r}
+library(rvest)
+library(glue)
+```
+## Base URL and Helper function
+```{r}
+base_url <- "https://www.rosebikes.com"
+read_paths <- function(path, css_selector){
+  base_url %>% 
+  glue(path) %>%
+  read_html() %>% 
+  html_nodes(css = css_selector) %>%
+  html_attr("href")
+}
+```
+## Getting Catalogs
+```{r}
+catalogs <- read_paths(path="/bikes", css_selector = ".catalog-navigation__link")[1:7]
+```
+
+## Getting Categories
+```{r}
+categories <- map(catalogs, read_paths, css_selector =".catalog-navigation__link" )
+categories[[1]] <- categories[[1]][2:5]
+categories[[2]] <- categories[[2]][2:3]
+categories[3:7] <- catalogs[3:7]
+```
+
+## Getting Models
+```{r}
+models <- list()
+for (category in categories){
+  temp = map(category, read_paths, css_selector=".catalog-category-bikes__button")  
+  models <- append(models, temp)
+}
+```
+
+## Getting Model types
+```{r}
+get_model_types <-function(model_type){
+  base_url %>% 
+    glue(model_type) %>% 
+    read_html() %>% 
+    html_nodes("h3.basic-headline__title") %>% 
+    html_text()
+}
+
+model_types <- list()
+for (model in models){
+  temp = map(model, get_model_types)  
+  model_types <- append(model_types, temp)
+}
+model_types[[4]] = model_types[[4]][5:10] 
+model_types[[11]] = model_types[[11]][3:20]
+```
+## Getting Prices
+```{r}
+replace_values =c(" "="", "\n"="", "€"="", ","="")
+
+get_prices <-function(model_type){
+  base_url %>% 
+    glue(model_type) %>% 
+    read_html() %>% 
+    html_nodes(css=".product-tile-price__current-value") %>%
+    html_text() %>% 
+    str_replace_all(replace_values) %>% 
+    as.numeric()
+}
+
+prices <- list()
+for (model in models){
+  temp = map(model, get_prices)
+  prices <- append(prices, temp)
+}
+
+```
+## Assembling Everything in single table
+```{r}
+models_tbl <- tibble() 
+model_types_tbl <- tibble()
+prices_tbl <- tibble()
+counter = 1
+for (model in models){
+  for (sp_model in model){
+  models_tbl <- bind_rows(models_tbl, 
+                          matrix(sp_model %>% 
+                                   rep(times= length(prices[[counter]]))) %>% 
+                            set_names(c("a")))
+  model_types_tbl <- bind_rows(model_types_tbl, 
+                               matrix(model_types[[counter]]) %>% 
+                                 set_names(c("b")))
+  prices_tbl <- bind_rows(prices_tbl,
+                          matrix(prices[[counter]]) %>% 
+                            set_names(c("c")))
+  counter = counter +1
+  if (counter==19){
+    break
+  }
+  }
+  if (counter==19){
+    break
+  }
+}
+final_data_tbl <- models_tbl %>% 
+  bind_cols(model_types_tbl) %>%
+  bind_cols(prices_tbl) %>% 
+  separate(col= "...1", into = c("empty", "vehicle","Sub_category_1", "Sub_category_2", "Sub_category_3"), sep = "/" ,remove = FALSE) %>% 
+  rename("URL"="...1", "Model"="...2", "price(in euro)"= "...3") %>% 
+  select(-2,-3)
+  
+#final_data_tbl[[6]] <- final_data_tbl[[6]] %>% as.numeric()
+
+```
+## Results
+```{r}
+final_data_tbl %>% head(n=10)
+```
+
