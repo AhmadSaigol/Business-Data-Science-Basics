@@ -16,7 +16,7 @@ output:
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
 
-# Part 1: Bored? Let's find you something
+# Bored? Let's find you something
 
 ## Loading Libraries
 ```{r}
