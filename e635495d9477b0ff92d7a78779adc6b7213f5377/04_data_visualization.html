@@ -384,64 +384,103 @@ div.tocify {
 </div>
 
 
-<p><strong>IMPORTANT:</strong> You can delete everything in here and
-start fresh. You might want to start by not deleting anything above this
-line until you know what that stuff is doing.</p>
-<p>This is an <code>.Rmd</code> file. It is plain text with special
-features. Any time you write just like this, it will be compiled to
-normal text in the website. If you put a # in front of your text, it
-will create a top level-header.</p>
-<div id="my-first-post" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> My first post</h1>
-<p>Last compiled: 2022-05-19</p>
-<p>Notice that whatever you define as a top level header, automatically
-gets put into the table of contents bar on the left.</p>
-<div id="second-level-header" class="section level2" number="1.1">
-<h2><span class="header-section-number">1.1</span> Second level
-header</h2>
-<p>You can add more headers by adding more hashtags. These won’t be put
-into the table of contents</p>
-<div id="third-level-header" class="section level3" number="1.1.1">
-<h3><span class="header-section-number">1.1.1</span> third level
-header</h3>
-<p>Here’s an even lower level header</p>
+<div id="loading-libraries" class="section level2" number="0.1">
+<h2><span class="header-section-number">0.1</span> Loading
+Libraries</h2>
+<pre class="r"><code>library(tidyverse)
+library(lubridate)</code></pre>
+</div>
+<div id="loading-data" class="section level2" number="0.2">
+<h2><span class="header-section-number">0.2</span> Loading Data</h2>
+<pre class="r"><code>covid_data_tbl &lt;- read_csv(&quot;https://covid.ourworldindata.org/data/owid-covid-data.csv&quot;)</code></pre>
+</div>
+<div id="map-the-time-course-of-the-cumulative-covid-19-cases"
+class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Map the time course of
+the cumulative Covid-19 cases</h1>
+<div id="refining-data" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> Refining Data</h2>
+<pre class="r"><code>refined_data &lt;- covid_data_tbl %&gt;% 
+  select(location, date, total_cases) %&gt;%
+  mutate(date = ymd(date)) %&gt;% 
+  filter(location %in% c(&quot;Germany&quot;, &quot;United Kingdom&quot;, &quot;France&quot;, &quot;Spain&quot;, &quot;United States&quot;)) 
+
+labels &lt;- refined_data %&gt;%
+          arrange(desc (date), desc(total_cases))%&gt;% 
+          mutate(total_cases_text = scales::dollar(total_cases, big.mark = &quot;.&quot;, 
+                                   decimal.mark = &quot;,&quot;, 
+                                   prefix = &quot;&quot;, 
+                                   suffix = &quot;&quot;)) %&gt;% 
+            head (2)</code></pre>
+</div>
+<div id="results" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Results</h2>
+<pre class="r"><code>refined_data %&gt;% 
+  ggplot(aes(date, total_cases, color =location)) + 
+  geom_smooth(method = &quot;loess&quot;, se=FALSE) + 
+  geom_label(label = labels$total_cases_text,
+             vjust = 0.5,
+             hjust = 0.5,
+             size=3, 
+             data = labels) +
+  expand_limits(y=10e7) +
+  labs (
+    title = &quot;COVID-19 Cases worldwide&quot;,
+    subtitle = &quot;As of 20th May 2022&quot;,
+    x = &quot;&quot;,
+    y = &quot;Cumulative Cases&quot;,
+  ) +
+  scale_y_continuous(labels = scales::dollar_format(scale  = 1/1e6, 
+                                                    prefix = &quot;&quot;, 
+                                                    suffix = &quot; M&quot;)) + 
+  scale_x_date(date_labels = &quot;%B %Y&quot;,  date_breaks = &quot;1 month&quot;) + 
+  theme_dark() + 
+  theme (legend.position = &quot;bottom&quot;,
+         legend.direction = &quot;horizontal&quot;,
+         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) + 
+  guides(color=guide_legend(nrow=2, byrow=TRUE, title = &quot;Continent / Country&quot;))</code></pre>
+<p><img src="04_data_visualization_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 </div>
 </div>
-</div>
-<div id="my-second-post-note-the-order" class="section level1"
+<div id="distribution-of-the-mortality-rate" class="section level1"
 number="2">
-<h1><span class="header-section-number">2</span> My second post (note
-the order)</h1>
-<p>Last compiled: 2022-05-19</p>
-<p>I’m writing this tutorial going from the top down. And, this is how
-it will be printed. So, notice the second post is second in the list. If
-you want your most recent post to be at the top, then make a new post
-starting at the top. If you want the oldest first, do, then keep adding
-to the bottom</p>
+<h1><span class="header-section-number">2</span> Distribution of the
+Mortality Rate</h1>
+<div id="refining-data-1" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Refining Data</h2>
+<pre class="r"><code>world &lt;- map_data (&quot;world&quot;) 
+
+mortality_rate &lt;- covid_data_tbl %&gt;% 
+  mutate(location = case_when(
+    location == &quot;United Kingdom&quot; ~ &quot;UK&quot;,
+    location == &quot;United States&quot; ~ &quot;USA&quot;,
+    location == &quot;Democratic Republic of Congo&quot; ~ &quot;Democratic Republic of the Congo&quot;,
+    TRUE ~ location
+  ), mortality_rate = total_deaths/population) %&gt;% distinct() %&gt;% 
+  filter (!is.na(total_deaths), !is.na(population)) %&gt;%
+  group_by(location) %&gt;% 
+  summarise(most_recent_mortality_rate = last(mortality_rate)) %&gt;% 
+  ungroup() %&gt;% 
+  select(location, most_recent_mortality_rate)
+
+combined_data &lt;- merge(x= world, y=mortality_rate, by.x = &quot;region&quot;, by.y = &quot;location&quot;) %&gt;% 
+  select(long, lat, region, most_recent_mortality_rate) %&gt;% 
+  group_by(most_recent_mortality_rate) %&gt;% 
+  slice(1)</code></pre>
 </div>
-<div id="adding-r-stuff" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Adding R stuff</h1>
-<p>So far this is just a blog where you can write in plain text and
-serve your writing to a webpage. One of the main purposes of this lab
-journal is to record your progress learning R. The reason I am asking
-you to use this process is because you can both make a website, and a
-lab journal, and learn R all in R-studio. This makes everything really
-convenient and in the same place.</p>
-<p>So, let’s say you are learning how to make a histogram in R. For
-example, maybe you want to sample 100 numbers from a normal distribution
-with mean = 0, and standard deviation = 1, and then you want to plot a
-histogram. You can do this right here by using an r code block, like
-this:</p>
-<pre class="r"><code>samples &lt;- rnorm(100, mean=0, sd=1)
-hist(samples)</code></pre>
-<p><img src="04_data_visualization_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<p>When you knit this R Markdown document, you will see that the
-histogram is printed to the page, along with the R code. This document
-can be set up to hide the R code in the webpage, just delete the comment
-(hashtag) from the cold folding option in the yaml header up top. For
-purposes of letting yourself see the code, and me see the code, best to
-keep it the way that it is. You’ll learn that all of these things and
-more can be customized in each R code block.</p>
+<div id="results-1" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Results</h2>
+<pre class="r"><code>combined_data %&gt;% 
+ggplot() + 
+  geom_map(aes(x = long, y= lat, map_id=region, fill=most_recent_mortality_rate), map=world) + 
+  scale_fill_continuous(labels=scales::percent_format(accuaracy= 0.001), low=&quot;lightgreen&quot;, high=&quot;darkgreen&quot;)+
+  labs (
+    title = &quot;Confirmed COVID-19 deaths relative to the size of the population&quot;,
+  )+
+  theme_bw() + 
+  theme (title = element_text( &quot;Mortality Rate&quot;))</code></pre>
+<p><img src="04_data_visualization_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
 </div>
 
 
