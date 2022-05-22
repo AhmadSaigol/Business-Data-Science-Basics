@@ -1,6 +1,5 @@
 ---
 title: "Class notes"
-date: "2021-04"
 output:
   html_document:
     toc: true
@@ -15,6 +14,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
+
+# Working with RMarkdown
 
 **IMPORTANT:** You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
 
