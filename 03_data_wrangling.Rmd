@@ -160,7 +160,8 @@ What US company / corporation has the most patents? List the 10 US companies wit
 combined_data_for_q1 <- merge(x = assignee_tbl, y = patent_assignee_tbl, 
                        by.x = c("id"), by.y = c("assignee_id"))
 
-combined_data_for_q1 [type == 2, .(number_of_patents=.N), by=organization][order(number_of_patents, decreasing=TRUE)] %>% head(n=10)
+combined_data_for_q1 [type == 2, .(number_of_patents=.N), by=organization][order(number_of_patents, decreasing=TRUE)] %>% 
+  head(n=10)
 
 
 ```
@@ -168,37 +169,39 @@ combined_data_for_q1 [type == 2, .(number_of_patents=.N), by=organization][order
 ## Recent patent activity
 What US company had the most patents granted in August 2014? List the top 10 companies with the most new granted patents for August 2014.
 
-Merge the previously merged data with patent through id.  extract subset of data where type==2 then group it via organization and perform summation operation along number of claims
-
 ### Most Number of patents granted in August 2014 to a US company
 ```{r}
 combined_data_for_q2 <- merge(x=combined_data_for_q1, y=patent_tbl, by.x = c("patent_id"), by.y = c("id"))
-combined_data_for_q2 <- combined_data_for_q2 %>%  separate(col= "date", into= c("year", "month", "day"), sep = "-")
-combined_data_for_q2[type == 2 & month == "08",  .(number_of_patents=.N), by=organization][order(number_of_patents, decreasing=TRUE)] %>% head(n=10)
+
+combined_data_for_q2 <- combined_data_for_q2 %>%
+  separate(col= "date", into= c("year", "month", "day"), sep = "-")
+
+combined_data_for_q2[type == 2 & month == "08",  .(number_of_patents=.N), by=organization][order(number_of_patents, decreasing=TRUE)] %>%
+  head(n=10)
 ```
 
 ### Top 10 companies with the most new granted patents for August 2014
 
 ```{r}
-combined_data_for_q2[month == "08", .(number_of_patents=.N), by=c("day", "organization")][!is.na(organization)][order(-day, -number_of_patents)] %>%  head(n=10)
+combined_data_for_q2[month == "08", .(number_of_patents=.N), by=c("day", "organization")][!is.na(organization)][order(-day, -number_of_patents)] %>%
+  head(n=10)
 ```
 ## Innovation in Tech:
 What is the most innovative tech sector? For the top 10 companies (worldwide) with the most patents, what are the top 5 USPTO tech main classes?
 
-Merge the merged data in question 1 with uspc through patient id. Group via sequence and determine the number of rows and arrange it in decreasing order. 
-group via type and arrange it in decreasing order. Obtain top 10 companies and sum along main class.
 
 ### Most Innovative Sector
 ```{r}
 combined_data_for_q3 <- merge(x=combined_data_for_q1, y=uspc_tbl, by= c("patent_id"))
-combined_data_for_q3 [,  .(number_of_patents=.N), by="mainclass_id"][order(-number_of_patents)] %>% head(n=10)
+
+combined_data_for_q3 [,  .(number_of_patents=.N), by="mainclass_id"][order(-number_of_patents)] %>% 
+  head(n=10)
 
 ```
 
  
-### Top 10 tech main classes among top 10 companies (worldwide) with most patents
+### Top 5 tech main classes among top 10 companies (worldwide) with most patents
 ```{r}
-
 companies <- combined_data_for_q3[, .(number_of_patents=.N), by=organization][order(-number_of_patents)][1:10, organization]
 
 combined_data_for_q3[organization %in% companies, .(freq_of_mainclass=.N), by = mainclass_id][order(-freq_of_mainclass)][1:5]
