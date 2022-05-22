@@ -417,10 +417,10 @@ labels &lt;- refined_data %&gt;%
 <h2><span class="header-section-number">1.2</span> Results</h2>
 <pre class="r"><code>refined_data %&gt;% 
   ggplot(aes(date, total_cases, color =location)) + 
-  geom_smooth(method = &quot;loess&quot;, se=FALSE) + 
+  geom_line(size=1) + 
   geom_label(label = labels$total_cases_text,
-             vjust = 0.5,
-             hjust = 0.5,
+             vjust =-0.02,
+             hjust = 1,
              size=3, 
              data = labels) +
   expand_limits(y=10e7) +
@@ -470,19 +470,14 @@ combined_data &lt;- merge(x= world, y=mortality_rate, by.x = &quot;region&quot;,
 </div>
 <div id="results-1" class="section level2" number="2.2">
 <h2><span class="header-section-number">2.2</span> Results</h2>
-<p>Hint: Add + theme(axis.text.x = element_text(angle = 45, hjust = 1))
-to your plotting code to rotate your x-axis labels. Probably you have to
-resize the viewer pane to show the entire plot. For your website, try
-different values for fig.width and fig.height in your markdown
-document:</p>
 <pre class="r"><code>combined_data %&gt;% 
-ggplot() + 
+  ggplot() + 
   geom_map(aes(x = long, y= lat, map_id=region, fill=most_recent_mortality_rate), map=world) + 
   scale_fill_continuous(labels=scales::percent_format(accuaracy= 0.001), low=&quot;lightgreen&quot;, high=&quot;darkgreen&quot;)+
   labs (
     title = &quot;Confirmed COVID-19 deaths relative to the size of the population&quot;,
   )+
-  theme_bw() + 
+  theme(axis.line = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())+
   theme (title = element_text( &quot;Mortality Rate&quot;))</code></pre>
 <p><img src="04_data_visualization_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
