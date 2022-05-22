@@ -73,7 +73,7 @@ data_from_web
 
 # Scraping competitor website
 
-## Loading Librariees
+## Loading Libraries
 ```{r}
 library(rvest)
 library(glue)
@@ -187,6 +187,7 @@ final_data_tbl <- models_tbl %>%
 
 ```
 ## Results
+
 ```{r message=FALSE, warning=FALSE}
 final_data_tbl %>% head(n=10)
 ```
