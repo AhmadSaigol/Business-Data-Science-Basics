@@ -415,7 +415,7 @@ orderlines_tbl &lt;- read_excel(&quot;00_data/01_raw_data/01_bike_sales/01_raw_d
 <h2><span class="header-section-number">1.4</span> Wrangling Data</h2>
 <pre class="r"><code>bike_orderlines_wrangled_tbl &lt;- bike_orderlines_joined_tbl %&gt;% 
   separate(col = location, into = c(&quot;city&quot;, &quot;state&quot;), sep = &quot;, &quot;) %&gt;% 
-  mutate( total.price= price*quantity) %&gt;%
+  mutate(total.price= price*quantity) %&gt;%
   set_names(names(.) %&gt;% str_replace_all(&quot;\\.&quot;, &quot;_&quot;))</code></pre>
 </div>
 <div id="analysis-by-location-state" class="section level2"
@@ -489,32 +489,12 @@ sales_by_year_location_tbl %&gt;% select(-(sales))</code></pre>
                                                     prefix = &quot;&quot;, 
                                                     suffix = &quot; €&quot;)) +
   labs(
-    title    = &quot;Revenue by year and location&quot;,
+    title = &quot;Revenue by year and location&quot;,
     fill = &quot;Locations&quot;
   ) +
   
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="01_tidyverse_files/figure-html/plot-1.png" width="1152" /></p>
-</div>
-</div>
-<div id="saving-data-for-future-use" class="section level2"
-number="1.7">
-<h2><span class="header-section-number">1.7</span> Saving Data for
-Future Use</h2>
-<div id="excel" class="section level3" number="1.7.1">
-<h3><span class="header-section-number">1.7.1</span> Excel</h3>
-<pre class="r"><code>bike_orderlines_wrangled_tbl %&gt;%
-  write_xlsx(&quot;00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.xlsx&quot;)</code></pre>
-</div>
-<div id="csv" class="section level3" number="1.7.2">
-<h3><span class="header-section-number">1.7.2</span> CSV</h3>
-<pre class="r"><code>bike_orderlines_wrangled_tbl %&gt;% 
-  write_csv(&quot;00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.csv&quot;)</code></pre>
-</div>
-<div id="rds" class="section level3" number="1.7.3">
-<h3><span class="header-section-number">1.7.3</span> RDS</h3>
-<pre class="r"><code>bike_orderlines_wrangled_tbl %&gt;% 
-  write_rds(&quot;00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.rds&quot;)</code></pre>
 </div>
 </div>
 </div>

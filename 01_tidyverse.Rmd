@@ -45,7 +45,7 @@ bike_orderlines_joined_tbl <- orderlines_tbl %>%
 ```{r}
 bike_orderlines_wrangled_tbl <- bike_orderlines_joined_tbl %>% 
   separate(col = location, into = c("city", "state"), sep = ", ") %>% 
-  mutate( total.price= price*quantity) %>%
+  mutate(total.price= price*quantity) %>%
   set_names(names(.) %>% str_replace_all("\\.", "_"))
 ```
 
@@ -105,26 +105,9 @@ sales_by_year_location_tbl %>% ggplot(aes(x = year, y = sales, fill = state)) +
                                                     prefix = "", 
                                                     suffix = " €")) +
   labs(
-    title    = "Revenue by year and location",
+    title = "Revenue by year and location",
     fill = "Locations"
   ) +
   
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-## Saving Data for Future Use
-### Excel 
-```{r}
-bike_orderlines_wrangled_tbl %>%
-  write_xlsx("00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.xlsx")
-```
-### CSV
-```{r}
-bike_orderlines_wrangled_tbl %>% 
-  write_csv("00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.csv")
-```
-### RDS
-```{r}
-bike_orderlines_wrangled_tbl %>% 
-  write_rds("00_data/01_raw_data/01_bike_sales/02_wrangled_data/bike_orderlines_challenge.rds")
 ```

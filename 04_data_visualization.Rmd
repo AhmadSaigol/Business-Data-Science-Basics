@@ -99,6 +99,14 @@ combined_data <- merge(x= world, y=mortality_rate, by.x = "region", by.y = "loca
 
 ```
 ## Results
+
+Hint: Add + theme(axis.text.x = element_text(angle = 45, hjust = 1)) to your plotting code to rotate your x-axis labels. Probably you have to resize the viewer pane to show the entire plot. For your website, try different values for fig.width and fig.height in your markdown document:
+
+```{r plot, fig.width=10, fig.height=7}
+
+
+```
+
 ```{r}
 combined_data %>% 
 ggplot() + 

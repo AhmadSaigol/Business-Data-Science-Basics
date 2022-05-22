@@ -470,6 +470,11 @@ combined_data &lt;- merge(x= world, y=mortality_rate, by.x = &quot;region&quot;,
 </div>
 <div id="results-1" class="section level2" number="2.2">
 <h2><span class="header-section-number">2.2</span> Results</h2>
+<p>Hint: Add + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+to your plotting code to rotate your x-axis labels. Probably you have to
+resize the viewer pane to show the entire plot. For your website, try
+different values for fig.width and fig.height in your markdown
+document:</p>
 <pre class="r"><code>combined_data %&gt;% 
 ggplot() + 
   geom_map(aes(x = long, y= lat, map_id=region, fill=most_recent_mortality_rate), map=world) + 
